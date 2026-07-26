@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>The Ledger — Finance Interview Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1220;
+    --panel:#121B2E;
+    --panel-2:#1A2540;
+    --gold:#C9A227;
+    --gold-soft:#E4C765;
+    --rose:#B2434F;
+    --sage:#4C8B6D;
+    --parchment:#EDE7D9;
+    --muted:#8B93A7;
+    --rule:rgba(237,231,217,0.12);
+    --rule-strong:rgba(237,231,217,0.22);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, rgba(201,162,39,0.07), transparent 45%),
+      var(--ink);
+    color:var(--parchment);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--gold); color:var(--ink);}
+
+  .display{font-family:'Spectral',Georgia,serif;}
+  .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.02em;}
+
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+
+  /* ===== Ticker ===== */
+  .ticker-wrap{
+    background:#080D18;
+    border-bottom:1px solid var(--rule);
+    overflow:hidden;
+    white-space:nowrap;
+    padding:8px 0;
+    position:relative;
+  }
+  .ticker-wrap::before, .ticker-wrap::after{
+    content:"";
+    position:absolute; top:0; bottom:0; width:36px; z-index:2;
+  }
+  .ticker-wrap::before{left:0; background:linear-gradient(90deg,#080D18, transparent);}
+  .ticker-wrap::after{right:0; background:linear-gradient(270deg,#080D18, transparent);}
+  .ticker-track{
+    display:inline-flex;
+    gap:36px;
+    animation:scroll 32s linear infinite;
+    padding-left:100%;
+  }
+  .ticker-wrap:hover .ticker-track{animation-play-state:paused;}
+  @keyframes scroll{
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-100%);}
+  }
+  .ticker-item{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:var(--muted);
+  }
+  .ticker-item b{color:var(--parchment); font-weight:600;}
+  .tick-up{color:var(--sage);}
+  .tick-flat{color:var(--gold-soft);}
+
+  /* ===== Header ===== */
+  header{
+    padding:22px 20px 10px;
+    max-width:760px;
+    margin:0 auto;
+  }
+  .brand{
+    display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  }
+  .brand h1{
+    font-size:26px; margin:0; font-weight:600; letter-spacing:0.01em;
+  }
+  .brand .rule-num{color:var(--gold); font-style:italic; font-weight:500;}
+  .subtitle{color:var(--muted); font-size:13px; margin-top:4px; letter-spacing:0.02em;}
+
+  .streak-pill{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    background:var(--panel);
+    border:1px solid var(--rule-strong);
+    border-radius:20px;
+    padding:6px 12px;
+    color:var(--gold-soft);
+    white-space:nowrap;
+  }
+
+  /* ===== Tabs ===== */
+  nav.tabs{
+    max-width:760px;
+    margin:14px auto 0;
+    padding:0 20px;
+    display:flex;
+    gap:4px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    border-bottom:1px solid var(--rule);
+  }
+  nav.tabs::-webkit-scrollbar{display:none;}
+  .tab-btn{
+    background:none; border:none;
+    color:var(--muted);
+    font-size:13.5px;
+    padding:10px 12px 12px;
+    white-space:nowrap;
+    border-bottom:2px solid transparent;
+    transition:color .15s;
+  }
+  .tab-btn.active{color:var(--gold-soft); border-bottom-color:var(--gold);}
+  .tab-btn:hover{color:var(--parchment);}
+
+  main{
+    max-width:760px;
+    margin:0 auto;
+    padding:20px 20px 80px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--rule);
+    border-radius:6px;
+    padding:20px;
+    margin-bottom:16px;
+  }
+  .card-title{
+    font-family:'Spectral',serif;
+    font-size:18px;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:8px;
+    display:block;
+  }
+  .muted{color:var(--muted); font-size:13.5px; line-height:1.55;}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    background:var(--gold);
+    color:#151005;
+    border:none;
+    border-radius:4px;
+    padding:11px 18px;
+    font-size:13.5px;
+    font-weight:600;
+    letter-spacing:0.01em;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-ghost{
+    background:transparent;
+    color:var(--parchment);
+    border:1px solid var(--rule-strong);
+  }
+  .btn-sm{padding:7px 12px; font-size:12.5px;}
+  .btn-block{width:100%;}
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap;}
+
+  textarea, input[type=text]{
+    width:100%;
+    background:#0E1526;
+    border:1px solid var(--rule-strong);
+    color:var(--parchment);
+    border-radius:4px;
+    padding:12px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    resize:vertical;
+  }
+  textarea:focus, input:focus{outline:2px solid var(--gold); outline-offset:1px;}
+
+  .chip{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    padding:3px 9px;
+    border-radius:20px;
+    border:1px solid var(--rule-strong);
+    color:var(--muted);
+    margin-right:6px;
+  }
+  .chip.acc{border-color:rgba(76,139,109,0.5); color:var(--sage);}
+  .chip.val{border-color:rgba(201,162,39,0.5); color:var(--gold-soft);}
+  .chip.mkt{border-color:rgba(178,67,79,0.5); color:var(--rose);}
+  .chip.quant{border-color:rgba(139,147,167,0.5); color:var(--muted);}
+  .chip.beh{border-color:rgba(201,162,39,0.5); color:var(--gold-soft);}
+
+  hr.rule{border:none; border-top:1px solid var(--rule); margin:16px 0;}
+
+  .answer-reveal{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px dashed var(--rule-strong);
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--parchment);
+  }
+  .answer-reveal b{color:var(--gold-soft);}
+
+  .rate-row{display:flex; gap:6px; margin-top:14px;}
+  .rate-btn{
+    flex:1;
+    background:#0E1526;
+    border:1px solid var(--rule-strong);
+    color:var(--muted);
+    border-radius:4px;
+    padding:8px 4px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+  }
+  .rate-btn.picked{background:var(--gold); color:#151005; border-color:var(--gold); font-weight:600;}
+
+  .progress-bar-track{
+    background:#0E1526;
+    border:1px solid var(--rule);
+    border-radius:20px;
+    height:8px;
+    overflow:hidden;
+    margin-top:6px;
+  }
+  .progress-bar-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--sage), var(--gold));
+    border-radius:20px;
+    transition:width .5s ease;
+  }
+  .cat-row{margin-bottom:14px;}
+  .cat-row-top{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:2px;}
+  .cat-row-top span:first-child{color:var(--parchment);}
+  .cat-row-top span:last-child{color:var(--muted); font-family:'IBM Plex Mono',monospace;}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:16px;}
+  .stat-box{
+    background:var(--panel);
+    border:1px solid var(--rule);
+    border-radius:6px;
+    padding:14px 10px;
+    text-align:center;
+  }
+  .stat-box .num{font-family:'Spectral',serif; font-size:24px; color:var(--gold-soft); font-weight:600;}
+  .stat-box .lbl{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;}
+
+  .company-row{display:flex; gap:8px; margin-bottom:10px;}
+  .company-list{margin-top:12px;}
+  .company-list-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:9px 0;
+    border-bottom:1px solid var(--rule);
+    font-size:13.5px;
+  }
+  .company-list-item .rm{color:var(--rose); font-size:11px; font-family:'IBM Plex Mono',monospace; background:none; border:none;}
+
+  .feedback-box{
+    background:#0E1526;
+    border-left:3px solid var(--gold);
+    border-radius:0 4px 4px 0;
+    padding:14px 16px;
+    margin-top:14px;
+    font-size:13.5px;
+    line-height:1.65;
+    white-space:pre-wrap;
+  }
+  .loading-dots{color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
+  .loading-dots::after{content:''; animation:dots 1.2s steps(4,end) infinite;}
+  @keyframes dots{0%{content:'';}25%{content:'.';}50%{content:'..';}75%{content:'...';}100%{content:'';}}
+
+  .mock-toolbar{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .mic-btn{
+    display:inline-flex; align-items:center; gap:7px;
+    background:#0E1526; border:1px solid var(--rule-strong); color:var(--parchment);
+    border-radius:20px; padding:8px 14px; font-size:12.5px; font-family:'IBM Plex Mono',monospace;
+  }
+  .mic-btn.recording{border-color:var(--rose); color:var(--rose);}
+  .mic-dot{width:8px; height:8px; border-radius:50%; background:var(--muted); display:inline-block;}
+  .mic-btn.recording .mic-dot{background:var(--rose); animation:pulse 1s infinite;}
+  @keyframes pulse{0%{opacity:1;}50%{opacity:0.25;}100%{opacity:1;}}
+  .elapsed{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted);}
+  .mic-unsupported{font-size:11.5px; color:var(--muted); font-style:italic;}
+  .source-tag{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:0.06em; padding:2px 8px; border-radius:10px; margin-bottom:8px;
+  }
+  .source-tag.live{background:rgba(76,139,109,0.18); color:var(--sage);}
+  .source-tag.offline{background:rgba(178,67,79,0.18); color:var(--rose);}
+  .retry-link{background:none; border:none; color:var(--gold-soft); text-decoration:underline; font-size:12px; padding:0;}
+
+  .empty-state{text-align:center; padding:30px 10px; color:var(--muted); font-size:13.5px;}
+
+  .flash{animation:flashUp 0.6s ease;}
+  @keyframes flashUp{0%{background:rgba(201,162,39,0.25);} 100%{background:transparent;}}
+
+  footer{
+    max-width:760px; margin:0 auto; padding:0 20px 40px;
+    text-align:center; color:var(--muted); font-size:11.5px;
+  }
+  footer button{background:none; border:none; color:var(--muted); text-decoration:underline; font-size:11.5px;}
+
+  @media (max-width:480px){
+    .brand h1{font-size:22px;}
+    .stat-grid{gap:8px;}
+    .stat-box .num{font-size:20px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="ticker-wrap"><div class="ticker-track" id="tickerTrack"></div></div>
+
+<header>
+  <div class="brand">
+    <h1 class="display">The <span class="rule-num">Ledger</span></h1>
+    <div class="streak-pill mono" id="streakPill">— day streak</div>
+  </div>
+  <div class="subtitle">Daily training desk for finance-role interviews</div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab-btn" data-tab="today">Today's Session</button>
+  <button class="tab-btn" data-tab="technical">Technical Drill</button>
+  <button class="tab-btn" data-tab="behavioral">Behavioral Drill</button>
+  <button class="tab-btn" data-tab="mock">Mock Interview</button>
+  <button class="tab-btn" data-tab="progress">Progress</button>
+  <button class="tab-btn" data-tab="companies">Companies</button>
+</nav>
+
+<main id="main">
+  <div class="empty-state loading-dots">Loading your desk</div>
+</main>
+
+<footer>
+  Practice log stored on this device only. <button id="resetBtn">Reset progress</button>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Data ----------
+  const TECHNICAL = {
+    accounting: [
+      {q:"Walk me through the three financial statements and how they link together.", a:"Net income (P&L) flows into retained earnings on the balance sheet and is the starting line of the cash flow statement. Cash flow adjusts net income for non-cash items (D&A, stock comp) and working-capital changes to get cash from operations; add investing and financing activities to get the net change in cash, which rolls onto the balance sheet's cash line. The balance sheet must balance every period as a result."},
+      {q:"If depreciation increases by ₹100, what happens to the three statements (assume 30% tax)?", a:"P&L: EBIT falls by ₹100, tax falls by ₹30, net income falls by ₹70. Cash flow: net income down ₹70, add back ₹100 depreciation, so cash from ops is up ₹30. Balance sheet: cash up ₹30, PP&E down ₹100 (net of dep.), so assets down ₹70; retained earnings down ₹70 (from lower net income) — both sides balance."},
+      {q:"What's the difference between accrual and cash accounting, and why does it matter for analysis?", a:"Accrual recognises revenue/expenses when earned/incurred, not when cash moves — it matches effort to results but can mask cash strain. Cash accounting tracks actual inflows/outflows. Analysts reconcile the two via the cash flow statement because a profitable company on paper can still run out of cash (working capital, capex timing)."},
+      {q:"Why might a company have positive net income but negative operating cash flow?", a:"Large non-cash gains, aggressive revenue recognition, or a build-up in working capital — e.g. rising receivables (sales booked but cash not collected) or rising inventory. It's a classic red flag worth digging into."},
+      {q:"What's goodwill and when does it get written down?", a:"Goodwill is the premium paid over the fair value of net identifiable assets in an acquisition. It sits on the balance sheet and is tested (not amortised, under most standards) for impairment annually or when a triggering event suggests the acquired business is worth less than book value — the write-down hits the P&L as a non-cash charge."}
+    ],
+    valuation: [
+      {q:"Walk me through a DCF from start to finish.", a:"Project unlevered free cash flow for 5–10 years (revenue → EBIT → less tax → plus D&A → less capex → less change in NWC). Discount each year's FCF back at the WACC. Add a terminal value (Gordon growth or exit multiple), discount that back too. Sum the discounted FCFs and terminal value to get enterprise value; subtract net debt to get equity value; divide by shares for value per share."},
+      {q:"How do you calculate WACC and why do we use it as the discount rate?", a:"WACC = (E/V)×Cost of Equity + (D/V)×Cost of Debt×(1-tax). Cost of equity typically via CAPM (risk-free rate + beta × equity risk premium). We use WACC because it reflects the blended return required by all capital providers, matching the unlevered (all-provider) cash flows being discounted."},
+      {q:"When would you use trading comps vs. precedent transactions vs. DCF?", a:"Trading comps for a quick market-based read using current public peer multiples. Precedent transactions for what strategic/financial buyers have actually paid, including control premiums — more relevant for M&A contexts. DCF for an intrinsic, assumption-driven view independent of market sentiment; most useful when good comps are scarce or you want to stress-test assumptions."},
+      {q:"Two companies have the same P/E ratio — does that mean they're equally valued?", a:"Not necessarily. P/E ignores capital structure differences, growth rates, margins, and accounting policy differences (e.g. one-off items in net income). You'd want to check growth-adjusted multiples (PEG), EV/EBITDA to normalise for leverage, and quality of earnings before concluding they're comparably valued."},
+      {q:"Why would you add back stock-based compensation in an EBITDA calculation, and what's the debate around that?", a:"SBC is a non-cash expense, so adding it back shows cash-generating power. The debate: SBC is real economic dilution to shareholders even though no cash leaves the business, so purists argue it should stay in when judging true profitability — treating it as 'non-cash' can overstate a company's earnings quality."}
+    ],
+    markets: [
+      {q:"Where are interest rates headed and how would that affect equity valuations?", a:"Frame it via the discount rate: higher rates raise the cost of equity/debt, which lowers the present value of future cash flows — hitting long-duration growth stocks hardest. Lower rates do the reverse. Tie your answer to a current rate view but keep the mechanism front and center; interviewers care more about the logic than the prediction."},
+      {q:"What's an inverted yield curve and why do people watch it?", a:"Normally longer-term bonds yield more than short-term ones to compensate for time/inflation risk. An inversion (short-term yields exceed long-term) has historically preceded recessions, as it signals markets expect rate cuts ahead due to weakening growth."},
+      {q:"Pick a sector you'd invest in for the next 12 months and defend it.", a:"There's no single right answer — the interviewer is testing structured reasoning: macro tailwind, company-level catalyst, valuation support, and a named risk. A strong answer names the sector, the specific catalyst, and one risk that could break the thesis."},
+      {q:"What's the difference between monetary and fiscal policy, and give one tool for each.", a:"Monetary policy is central-bank driven — controlling money supply/rates via tools like the repo rate or open market operations. Fiscal policy is government-driven — spending and taxation, e.g. an infrastructure spending package or a tax cut."},
+      {q:"Why might a strong jobs report cause stock markets to fall?", a:"Counterintuitive but common: strong employment data can signal an overheating economy, raising expectations that the central bank will hike rates or delay cuts to control inflation — higher expected rates lower the present value of future earnings, pressuring equities."}
+    ],
+    quant: [
+      {q:"You have a 3L and a 5L jug (no markings). How do you measure exactly 4L?", a:"Fill 5L, pour into 3L (leaves 2L in the 5L jug). Empty the 3L jug, pour the 2L into it. Fill the 5L jug again, top off the 3L jug (which needs 1L) — that leaves exactly 4L in the 5L jug."},
+      {q:"What's 15% of 240, done in your head, and talk me through your method.", a:"10% of 240 is 24; 5% is half of that, 12; 15% = 24+12 = 36. The interviewer is grading your mental-math approach as much as the answer — narrate the breakdown."},
+      {q:"If a stock drops 50%, what % gain is needed to get back to the original price?", a:"100%. If price is P and it drops to 0.5P, you need to go from 0.5P back to P, which is a 100% increase on the new base — illustrates why losses are asymmetric to recover from."},
+      {q:"Estimate the number of petrol pumps in Bengaluru.", a:"A market-sizing/Fermi question — there's no fixed answer. Structure: population (~1.3 crore) → vehicles per capita → average fuel-ups per vehicle per month → capacity a single pump can serve → back into a number. Interviewers score the structure and sanity-checks, not precision."},
+      {q:"You roll two fair dice. What's the probability the sum is 7?", a:"6 out of 36 combinations sum to 7 (1-6,2-5,3-4,4-3,5-2,6-1), so probability = 6/36 = 1/6."}
+    ]
+  };
+
+  const BEHAVIORAL = [
+    {q:"Tell me about yourself.", tip:"Structure: present (what you're doing/studying now) → past (relevant experience that built toward finance) → future (why this role, now). Keep it under 90 seconds — this isn't a life story, it's a pitch."},
+    {q:"Why finance, and why this role specifically?", tip:"Avoid generic 'I like numbers.' Anchor to a specific moment or experience that pulled you toward markets/deals/analysis, then connect it to what this particular role actually does day-to-day."},
+    {q:"Tell me about a time you worked under significant pressure or a tight deadline.", tip:"Use STAR: Situation, Task, Action, Result. Be specific about YOUR actions (not 'we'), and quantify the result where possible."},
+    {q:"Describe a time you disagreed with a teammate or senior. How did you handle it?", tip:"Show you can disagree respectfully and with evidence, not that you were 'right.' End with what you learned about working with others."},
+    {q:"What's your biggest weakness?", tip:"Pick something real but not disqualifying for the role, and show the concrete step you're taking to address it — the fix matters more than the flaw."},
+    {q:"Tell me about a failure and what you learned from it.", tip:"Own the failure without over-apologising. Spend most of your answer on the lesson and how you've since applied it."},
+    {q:"Why should we hire you over another candidate with a similar profile?", tip:"Don't compare yourself to a hypothetical rival — talk concretely about what you bring that's evidenced by something you've actually done."},
+    {q:"Where do you see yourself in five years?", tip:"Show ambition that's plausible and aligned with a career at this kind of firm — vague answers ('I don't know, wherever this takes me') read as unprepared."},
+    {q:"Tell me about a time you had to explain something complex to someone without a finance background.", tip:"This tests communication, not technical depth. Show you can simplify without dumbing down — use an analogy if you have one."},
+    {q:"Give me an example of when you took initiative without being asked.", tip:"Pick a moment with a clear before/after — what changed because you acted, not just that you 'helped out.'"},
+    {q:"How do you prioritise when you have multiple deadlines at once?", tip:"Give your actual method (urgency vs. impact, a tool you use, checking in with stakeholders) with one concrete example, not just 'I make a to-do list.'"},
+    {q:"What questions do you have for us?", tip:"Never say 'none.' Ask something that shows you've researched the firm — about a recent deal, desk structure, or what success looks like in the first six months."}
+  ];
+
+  const MOCK_POOL = [
+    "Walk me through a DCF and tell me what you'd flag as the most sensitive assumption.",
+    "Why do you want to work in finance, and why at this firm specifically?",
+    "Tell me about a time you had to defend an unpopular analysis or opinion to a senior person.",
+    "If EBITDA is meant to be a proxy for cash flow, what does it conveniently ignore?",
+    "Pitch me a stock or sector you're bullish on, in under 60 seconds.",
+    "Tell me about a time you made a mistake under a deadline. What did you do next?",
+    "How would you value a company with negative earnings?",
+    "Describe a moment you had to learn something technical very quickly. How did you approach it?",
+    "What's a recent market or business news story that caught your attention, and why does it matter?",
+    "Tell me about a time you had to work with someone difficult. What was the outcome?"
+  ];
+
+  const CATEGORY_LABELS = {accounting:"Accounting",valuation:"Valuation",markets:"Markets",quant:"Quant",behavioral:"Behavioral",delivery:"Delivery"};
+
+  // ---------- State ----------
+  let companies = [];
+  let progress = {streak:0, lastPracticeDate:null, sessionsCompleted:0, categoryScores:{accounting:0,valuation:0,markets:0,quant:0,behavioral:0,delivery:0}, categoryReps:{accounting:0,valuation:0,markets:0,quant:0,behavioral:0,delivery:0}};
+  let activeTab = "today";
+  let todaySession = null; // built fresh each day
+  let storageReady = false;
+
+  const $ = sel => document.querySelector(sel);
+  const main = $("#main");
+
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+  function pickRandom(arr, n){
+    const copy = [...arr];
+    const out = [];
+    while(out.length < n && copy.length){
+      out.push(copy.splice(Math.floor(Math.random()*copy.length),1)[0]);
+    }
+    return out;
+  }
+
+  // ---------- Storage ----------
+  async function loadState(){
+    try{
+      const c = await window.storage.get('kb-companies', false);
+      companies = c ? JSON.parse(c.value) : [];
+    }catch(e){ companies = []; }
+    try{
+      const p = await window.storage.get('kb-progress', false);
+      if(p) progress = JSON.parse(p.value);
+    }catch(e){ /* first run, defaults stand */ }
+    storageReady = true;
+  }
+  async function saveCompanies(){
+    try{ await window.storage.set('kb-companies', JSON.stringify(companies), false); }
+    catch(e){ console.error('save companies failed', e); }
+  }
+  async function saveProgress(){
+    try{ await window.storage.set('kb-progress', JSON.stringify(progress), false); }
+    catch(e){ console.error('save progress failed', e); }
+  }
+
+  // ---------- Streak / readiness ----------
+  function readiness(){
+    const vals = Object.values(progress.categoryScores);
+    const reps = Object.values(progress.categoryReps);
+    let sum=0, wsum=0;
+    vals.forEach((v,i)=>{ sum += v*reps[i]; wsum += reps[i]; });
+    if(wsum===0) return 38; // baseline starting point
+    return Math.round(38 + (sum/wsum/5)*55); // scale 1-5 avg rating into 38-93 range
+  }
+
+  function markPracticedToday(){
+    const t = todayStr();
+    if(progress.lastPracticeDate === t) return; // already counted today
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+    if(progress.lastPracticeDate === yesterday){ progress.streak += 1; }
+    else { progress.streak = 1; }
+    progress.lastPracticeDate = t;
+    progress.sessionsCompleted += 1;
+  }
+
+  function recordRating(cat, stars){
+    const n = progress.categoryReps[cat] || 0;
+    const cur = progress.categoryScores[cat] || 0;
+    progress.categoryScores[cat] = (cur*n + stars) / (n+1);
+    progress.categoryReps[cat] = n+1;
+    markPracticedToday();
+    saveProgress();
+    renderStreakPill();
+  }
+
+  // ---------- Rendering: shell ----------
+  function renderStreakPill(){
+    $("#streakPill").textContent = `${progress.streak} day streak · ${readiness()}% ready`;
+  }
+
+  function renderTicker(){
+    const track = $("#tickerTrack");
+    const r = readiness();
+    const arrow = r>=60 ? "▲" : "▶";
+    const cls = r>=60 ? "tick-up" : "tick-flat";
+    let items = companies.length ? companies : [{name:"ADD COMPANIES"}];
+    let html = "";
+    for(let rep=0; rep<3; rep++){
+      items.forEach(c=>{
+        html += `<span class="ticker-item"><b>${escapeHtml(c.name.toUpperCase())}</b> <span class="${cls}">${arrow} ${r}%</span></span>`;
+      });
+    }
+    track.innerHTML = html;
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function setTab(tab){
+    activeTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+    render();
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.addEventListener('click', ()=>setTab(b.dataset.tab));
+  });
+
+  // ---------- Views ----------
+  function buildTodaySession(){
+    if(todaySession && todaySession.date === todayStr()) return todaySession;
+    const techPool = [];
+    Object.keys(TECHNICAL).forEach(cat=> TECHNICAL[cat].forEach(q=> techPool.push({...q, cat})));
+    todaySession = {
+      date: todayStr(),
+      technical: pickRandom(techPool, 3),
+      behavioral: pickRandom(BEHAVIORAL, 2),
+      mock: pickRandom(MOCK_POOL, 1)[0],
+      doneFlags: {}
+    };
+    return todaySession;
+  }
+
+  function viewToday(){
+    const s = buildTodaySession();
+    const items = [
+      ...s.technical.map((it,i)=>({type:'tech', idx:i, ...it})),
+      ...s.behavioral.map((it,i)=>({type:'beh', idx:i, ...it}))
+    ];
+    let doneCount = Object.values(s.doneFlags).filter(Boolean).length;
+    let total = items.length;
+
+    let html = `
+      <div class="card">
+        <span class="eyebrow">Today's Desk · ${new Date().toLocaleDateString('en-IN',{weekday:'long', day:'numeric', month:'short'})}</span>
+        <h2 class="card-title">${doneCount}/${total} drills cleared</h2>
+        <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${total?Math.round(doneCount/total*100):0}%"></div></div>
+        <p class="muted" style="margin-top:12px;">A short mixed set — technical, behavioral, and one open mock question. Rate yourself honestly after each; it's what drives your readiness score.</p>
+      </div>
+    `;
+
+    items.forEach(it=>{
+      const key = it.type+it.idx;
+      const done = s.doneFlags[key];
+      if(it.type==='tech'){
+        html += questionCard({
+          key, chipClass: it.cat, chipLabel: CATEGORY_LABELS[it.cat],
+          q: it.q, reveal: it.a, cat: it.cat, done
+        });
+      }else{
+        html += questionCard({
+          key, chipClass:'beh', chipLabel:'Behavioral',
+          q: it.q, reveal: it.tip, revealLabel:"Coaching tip", cat:'behavioral', done
+        });
+      }
+    });
+
+    html += `
+      <div class="card">
+        <span class="eyebrow">Bonus · Mock Question</span>
+        <h3 class="card-title" style="font-size:15.5px;">${escapeHtml(s.mock)}</h3>
+        <p class="muted">Head to the Mock Interview tab to answer this one live and get AI feedback.</p>
+        <button class="btn btn-sm" id="goMockBtn">Answer in Mock Interview →</button>
+      </div>
+    `;
+    main.innerHTML = html;
+
+    document.querySelectorAll('.reveal-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const box = b.closest('.card').querySelector('.answer-reveal');
+        box.style.display = box.style.display==='none' ? 'block' : 'none';
+      });
+    });
+    document.querySelectorAll('.rate-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const cat = b.dataset.cat, key = b.dataset.key, stars = parseInt(b.dataset.stars,10);
+        recordRating(cat, stars);
+        todaySession.doneFlags[key] = true;
+        const card = b.closest('.card');
+        card.classList.add('flash');
+        setTimeout(()=>viewToday(), 350);
+      });
+    });
+    const goMock = $("#goMockBtn");
+    if(goMock) goMock.addEventListener('click', ()=>setTab('mock'));
+  }
+
+  function questionCard({key, chipClass, chipLabel, q, reveal, revealLabel, cat, done}){
+    return `
+      <div class="card">
+        <span class="chip ${chipClass}">${chipLabel}</span>
+        <h3 class="card-title" style="font-size:15.5px; margin-top:8px;">${escapeHtml(q)}</h3>
+        <button class="btn btn-ghost btn-sm reveal-btn" type="button">${revealLabel || 'Reveal model answer'}</button>
+        <div class="answer-reveal" style="display:none;"><b>${revealLabel || 'Model answer'}:</b> ${escapeHtml(reveal)}</div>
+        <div class="rate-row">
+          ${[1,2,3,4,5].map(n=>`<button class="rate-btn ${done? '' : ''}" data-cat="${cat}" data-key="${key}" data-stars="${n}">${n}★</button>`).join('')}
+        </div>
+        <p class="muted" style="margin-top:6px; font-size:11.5px;">${done? 'Rated — great, on to the next.' : 'Rate how well you answered this, out loud, before checking the model answer.'}</p>
+      </div>
+    `;
+  }
+
+  function viewDrill(bankKeyList, isBehavioral){
+    let pool = [];
+    if(isBehavioral){
+      pool = BEHAVIORAL.map(b=>({q:b.q, reveal:b.tip, revealLabel:'Coaching tip', cat:'behavioral', chip:'Behavioral', chipClass:'beh'}));
+    }else{
+      Object.keys(TECHNICAL).forEach(cat=>{
+        TECHNICAL[cat].forEach(item=>{
+          pool.push({q:item.q, reveal:item.a, revealLabel:'Model answer', cat, chip:CATEGORY_LABELS[cat], chipClass:cat});
+        });
+      });
+    }
+    let html = `
+      <div class="card">
+        <span class="eyebrow">${isBehavioral? 'Behavioral Drill' : 'Technical Drill'}</span>
+        <h2 class="card-title">${isBehavioral? 'Soft skills & delivery' : 'Finance technicals'}</h2>
+        <p class="muted">${isBehavioral? 'STAR-format prompts. Answer out loud, then rate yourself.' : 'Covers accounting, valuation, markets, and quant/brainteasers. Answer out loud before revealing.'}</p>
+      </div>
+    `;
+    pool.forEach((it,i)=>{
+      html += questionCard({key:'drill'+i, chipClass:it.chipClass, chipLabel:it.chip, q:it.q, reveal:it.reveal, revealLabel:it.revealLabel, cat:it.cat, done:false});
+    });
+    main.innerHTML = html;
+    document.querySelectorAll('.reveal-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const box = b.closest('.card').querySelector('.answer-reveal');
+        box.style.display = box.style.display==='none' ? 'block' : 'none';
+      });
+    });
+    document.querySelectorAll('.rate-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        recordRating(b.dataset.cat, parseInt(b.dataset.stars,10));
+        b.closest('.rate-row').querySelectorAll('.rate-btn').forEach(x=>x.classList.remove('picked'));
+        b.classList.add('picked');
+      });
+    });
+  }
+
+  // ---------- Mock interview (AI powered) ----------
+  let mockCurrent = null;
+  function viewMock(){
+    if(!mockCurrent) mockCurrent = MOCK_POOL[Math.floor(Math.random()*MOCK_POOL.length)];
+    main.innerHTML = `
+      <div class="card">
+        <span class="eyebrow">Mock Interview</span>
+        <h2 class="card-title">Live-graded practice</h2>
+        <p class="muted">Type your answer as you'd say it out loud. You'll get structured interviewer feedback on content, structure, and delivery — plus a follow-up curveball.</p>
+      </div>
+      <div class="card">
+        <span class="chip beh">Interviewer asks</span>
+        <h3 class="card-title" style="font-size:16px; margin-top:8px;">${escapeHtml(mockCurrent)}</h3>
+        <div class="btn-row" style="margin-bottom:10px;">
+          <button class="btn btn-ghost btn-sm" id="newQBtn">New question</button>
+        </div>
+        <div class="mock-toolbar">
+          <button class="mic-btn" id="micBtn" type="button"><span class="mic-dot"></span><span id="micBtnLabel">Record answer</span></button>
+          <span class="elapsed mono" id="elapsedTime"></span>
+          <span class="mic-unsupported" id="micUnsupported" style="display:none;">Live voice capture isn't supported in this browser — type your answer instead.</span>
+        </div>
+        <textarea id="mockAnswer" rows="6" placeholder="Type your answer, or tap Record answer to speak it live..."></textarea>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn" id="submitMockBtn">Get feedback</button>
+        </div>
+        <div id="mockFeedbackArea"></div>
+      </div>
+    `;
+    $("#newQBtn").addEventListener('click', ()=>{ mockCurrent = MOCK_POOL[Math.floor(Math.random()*MOCK_POOL.length)]; viewMock(); });
+    $("#submitMockBtn").addEventListener('click', submitMock);
+    setupMic();
+  }
+
+  // ---------- Live voice recording (no network required) ----------
+  let recognition = null;
+  let recording = false;
+  let baseTranscript = '';
+  let timerInterval = null;
+  let recordStart = null;
+
+  function setupMic(){
+    const micBtn = $("#micBtn");
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){
+      micBtn.style.display = 'none';
+      $("#micUnsupported").style.display = 'inline';
+      return;
+    }
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN';
+
+    recognition.onresult = (e)=>{
+      let interim = '';
+      let finalChunk = '';
+      for(let i=e.resultIndex; i<e.results.length; i++){
+        const t = e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalChunk += t + ' ';
+        else interim += t;
+      }
+      if(finalChunk) baseTranscript += finalChunk;
+      const ta = $("#mockAnswer");
+      if(ta) ta.value = (baseTranscript + interim).trim();
+    };
+    recognition.onerror = ()=>{ stopRecording(); };
+    recognition.onend = ()=>{ if(recording) stopRecording(); };
+
+    micBtn.addEventListener('click', ()=>{
+      recording ? stopRecording() : startRecording();
+    });
+  }
+
+  function startRecording(){
+    if(!recognition) return;
+    baseTranscript = $("#mockAnswer").value ? $("#mockAnswer").value.trim() + ' ' : '';
+    recording = true;
+    recordStart = Date.now();
+    $("#micBtn").classList.add('recording');
+    $("#micBtnLabel").textContent = 'Stop recording';
+    timerInterval = setInterval(()=>{
+      const secs = Math.floor((Date.now()-recordStart)/1000);
+      const m = String(Math.floor(secs/60)).padStart(2,'0');
+      const s = String(secs%60).padStart(2,'0');
+      const el = $("#elapsedTime");
+      if(el) el.textContent = `${m}:${s}`;
+    }, 250);
+    try{ recognition.start(); }catch(e){ /* already started */ }
+  }
+
+  function stopRecording(){
+    recording = false;
+    const micBtn = $("#micBtn");
+    if(micBtn){ micBtn.classList.remove('recording'); }
+    const lbl = $("#micBtnLabel");
+    if(lbl) lbl.textContent = 'Record answer';
+    if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+    try{ recognition && recognition.stop(); }catch(e){}
+  }
+
+  const FILLERS = ['um','uh','like','basically','actually','you know','sort of','kind of','literally','i mean'];
+  const STAR_WORDS = {
+    situation:['situation','context','background','when i','while i','during'],
+    task:['task','goal','needed to','responsible for','had to'],
+    action:['i did','i decided','i built','i led','i analysed','i analyzed','i created','i took','i approached'],
+    result:['result','outcome','as a result','ended up','achieved','impact','led to']
+  };
+
+  function analyzeAnswerLocally(question, answer){
+    const words = answer.trim().split(/\s+/).filter(Boolean);
+    const wc = words.length;
+    const lower = answer.toLowerCase();
+    const speakSecs = Math.round(wc / (140/60)); // ~140 wpm
+    const fillerHits = FILLERS.filter(f=> lower.includes(f));
+    const fillerCount = fillerHits.reduce((sum,f)=> sum + (lower.split(f).length-1), 0);
+
+    let lengthNote;
+    if(wc < 25) lengthNote = "Quite short for an interview answer — likely under 15 seconds spoken. Add one more concrete layer of detail.";
+    else if(wc > 220) lengthNote = "Running long — likely 90+ seconds spoken. Tighten it; interviewers start losing patience past ~90 seconds.";
+    else lengthNote = `Roughly ${speakSecs}s spoken at a natural pace — a reasonable length.`;
+
+    let structureNote;
+    const isBehavioral = /\btime you\b|\btell me about\b|\bdescribe a\b/i.test(question);
+    if(isBehavioral){
+      const hits = Object.entries(STAR_WORDS).filter(([k,words])=> words.some(w=>lower.includes(w))).map(([k])=>k);
+      if(hits.length>=3) structureNote = `Hits most of STAR (detected: ${hits.join(', ')}) — good shape.`;
+      else structureNote = `Only clearly hit: ${hits.length? hits.join(', ') : 'none of STAR'}. Make sure Situation, Task, Action and Result are each explicit, not implied.`;
+    }else{
+      structureNote = /first|second|then|therefore|so |because|which means/i.test(lower)
+        ? "Shows some logical signposting (first/then/because) — good for a technical walk-through."
+        : "No clear step-by-step signposting detected — technical answers land better as an explicit numbered build.";
+    }
+
+    let fillerNote = fillerCount===0
+      ? "No obvious filler words in the text — clean."
+      : `Roughly ${fillerCount} filler word(s) detected (${fillerHits.slice(0,3).join(', ')}...) — trim these when you say it aloud.`;
+
+    const followUps = MOCK_POOL.filter(m=>m!==question);
+    const followUp = followUps[Math.floor(Math.random()*followUps.length)];
+
+    return `CONTENT: ${lengthNote}
+STRUCTURE: ${structureNote}
+DELIVERY: ${fillerNote}
+FOLLOW-UP: ${followUp}`;
+  }
+
+  async function submitMock(){
+    const ta = $("#mockAnswer");
+    const answer = ta.value.trim();
+    const area = $("#mockFeedbackArea");
+    if(recording) stopRecording();
+    if(!answer){
+      area.innerHTML = `<p class="muted" style="color:var(--rose); margin-top:10px;">Record or type an answer first — even a rough one.</p>`;
+      return;
+    }
+    area.innerHTML = `<div class="feedback-box"><span class="loading-dots">Interviewer is reviewing your answer</span></div>`;
+    $("#submitMockBtn").disabled = true;
+
+    const companyContext = companies.length
+      ? `The candidate is preparing for interviews at: ${companies.map(c=>c.name).join(', ')}.`
+      : '';
+
+    const systemPrompt = `You are a senior, no-nonsense but fair interviewer at a top finance firm (investment banking / equity research / corporate finance) interviewing a candidate for a campus placement. You just asked: "${mockCurrent}". The candidate answered. ${companyContext}
+Give feedback as plain text with this exact structure and nothing else, no markdown headers with #, use the labels below followed by a colon:
+CONTENT: 1-2 sentences on whether the substance/logic was correct and complete.
+STRUCTURE: 1-2 sentences on whether the answer was organised (e.g. STAR, or logical build for technical) or rambling.
+DELIVERY: 1-2 sentences on clarity, conciseness, confidence of the phrasing itself.
+FOLLOW-UP: one tough, realistic follow-up question a real interviewer would ask next, based specifically on what the candidate said.
+Be direct and specific to what they actually wrote — reference their own words or reasoning. Do not be generically encouraging; be honest like a real interviewer, including if the answer was weak. Keep the whole response under 160 words.`;
+
+    let feedback = null;
+    let live = false;
+    // 👇 Replace this with your own Cloudflare Worker URL from Step 2
+    const WORKER_URL = "https://easyfinancetrainer.vishalladha3.workers.dev/";
+    try{
+      const controller = new AbortController();
+      const timeout = setTimeout(()=>controller.abort(), 12000);
+      const response = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: [{role:"user", content: `My answer: ${answer}`}]
+        })
+      });
+      clearTimeout(timeout);
+      if(!response.ok) throw new Error('bad status');
+      const data = await response.json();
+      const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+      const text = textBlocks.join('\n').trim();
+      if(text){ feedback = text; live = true; }
+    }catch(e){
+      feedback = null;
+    }
+
+    if(!feedback){
+      feedback = analyzeAnswerLocally(mockCurrent, answer);
+      live = false;
+    }
+
+    renderMockFeedback(feedback, live, answer);
+    $("#submitMockBtn").disabled = false;
+  }
+
+  function renderMockFeedback(feedback, live, answer){
+    const area = $("#mockFeedbackArea");
+    area.innerHTML = `
+      <span class="source-tag ${live?'live':'offline'}">${live? 'Live AI feedback' : 'Offline analysis'}</span>
+      <div class="feedback-box">${escapeHtml(feedback)}</div>
+      ${!live? `<p class="muted" style="margin-top:8px;">Couldn't reach the AI interviewer, so this is a rule-based read on length, structure and filler words instead. <button class="retry-link" id="retryMockBtn">Retry AI feedback</button></p>` : ''}
+      <div class="rate-row" style="margin-top:14px;">
+        ${[1,2,3,4,5].map(n=>`<button class="rate-btn" data-cat="delivery" data-stars="${n}">${n}★</button>`).join('')}
+      </div>
+      <p class="muted" style="margin-top:6px; font-size:11.5px;">Rate your own delivery on this one to log it toward your readiness score.</p>
+    `;
+    document.querySelectorAll('#mockFeedbackArea .rate-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        recordRating('delivery', parseInt(b.dataset.stars,10));
+        document.querySelectorAll('#mockFeedbackArea .rate-btn').forEach(x=>x.classList.remove('picked'));
+        b.classList.add('picked');
+      });
+    });
+    const retryBtn = $("#retryMockBtn");
+    if(retryBtn) retryBtn.addEventListener('click', submitMock);
+  }
+
+  // ---------- Progress ----------
+  function viewProgress(){
+    const cats = ['accounting','valuation','markets','quant','behavioral','delivery'];
+    let rows = cats.map(c=>{
+      const score = progress.categoryScores[c] || 0;
+      const reps = progress.categoryReps[c] || 0;
+      const pct = Math.round((score/5)*100);
+      return `<div class="cat-row">
+        <div class="cat-row-top"><span>${CATEGORY_LABELS[c]}</span><span>${reps? score.toFixed(1)+'/5 · '+reps+' reps' : 'no data yet'}</span></div>
+        <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+
+    main.innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-box"><div class="num mono">${progress.streak}</div><div class="lbl">Day streak</div></div>
+        <div class="stat-box"><div class="num mono">${progress.sessionsCompleted}</div><div class="lbl">Sessions logged</div></div>
+        <div class="stat-box"><div class="num mono">${readiness()}%</div><div class="lbl">Readiness</div></div>
+      </div>
+      <div class="card">
+        <span class="eyebrow">By category</span>
+        <h2 class="card-title">Where you stand</h2>
+        ${rows}
+        <p class="muted" style="margin-top:10px;">Scores update every time you self-rate a drill or mock answer. Aim to touch every category at least a few times before your interviews.</p>
+      </div>
+    `;
+  }
+
+  // ---------- Companies ----------
+  function viewCompanies(){
+    main.innerHTML = `
+      <div class="card">
+        <span class="eyebrow">Application List</span>
+        <h2 class="card-title">Companies you're targeting</h2>
+        <p class="muted">These run across the ticker at the top. Add every firm you're applying to — it keeps the desk feeling real.</p>
+        <div class="company-row">
+          <input type="text" id="companyInput" placeholder="e.g. Kotak Investment Banking">
+          <button class="btn btn-sm" id="addCompanyBtn">Add</button>
+        </div>
+        <div class="company-list" id="companyList"></div>
+      </div>
+    `;
+    renderCompanyList();
+    $("#addCompanyBtn").addEventListener('click', addCompany);
+    $("#companyInput").addEventListener('keydown', e=>{ if(e.key==='Enter') addCompany(); });
+  }
+  function renderCompanyList(){
+    const el = $("#companyList");
+    if(!companies.length){ el.innerHTML = `<p class="muted" style="margin-top:8px;">No companies added yet.</p>`; return; }
+    el.innerHTML = companies.map((c,i)=>`
+      <div class="company-list-item">
+        <span>${escapeHtml(c.name)}</span>
+        <button class="rm" data-i="${i}">REMOVE</button>
+      </div>
+    `).join('');
+    el.querySelectorAll('.rm').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        companies.splice(parseInt(b.dataset.i,10),1);
+        saveCompanies();
+        renderCompanyList();
+        renderTicker();
+      });
+    });
+  }
+  function addCompany(){
+    const input = $("#companyInput");
+    const val = input.value.trim();
+    if(!val) return;
+    companies.push({name: val});
+    input.value = '';
+    saveCompanies();
+    renderCompanyList();
+    renderTicker();
+  }
+
+  // ---------- Router ----------
+  function render(){
+    renderTicker();
+    renderStreakPill();
+    if(activeTab==='today') viewToday();
+    else if(activeTab==='technical') viewDrill(null, false);
+    else if(activeTab==='behavioral') viewDrill(null, true);
+    else if(activeTab==='mock') viewMock();
+    else if(activeTab==='progress') viewProgress();
+    else if(activeTab==='companies') viewCompanies();
+  }
+
+  // ---------- Reset ----------
+  $("#resetBtn").addEventListener('click', async ()=>{
+    if(!confirm("Reset all progress and companies? This can't be undone.")) return;
+    progress = {streak:0, lastPracticeDate:null, sessionsCompleted:0, categoryScores:{accounting:0,valuation:0,markets:0,quant:0,behavioral:0,delivery:0}, categoryReps:{accounting:0,valuation:0,markets:0,quant:0,behavioral:0,delivery:0}};
+    companies = [];
+    await saveProgress();
+    await saveCompanies();
+    todaySession = null;
+    render();
+  });
+
+  // ---------- Init ----------
+  (async function init(){
+    await loadState();
+    document.querySelector('.tab-btn[data-tab="today"]').classList.add('active');
+    render();
+  })();
+
+})();
+</script>
+</body>
+</html>
